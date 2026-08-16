@@ -1,0 +1,30 @@
+# Data (imagery, metadata, segmentation masks, generated CSVs/GeoJSON) is
+# never committed - it's large, and typically project/client-specific.
+00_Source/
+02_Process/
+03_Model/
+04_Result/
+*.csv
+*.geojson
+*.epw
+*.3dm
+*.3dm.rhl
+*.gh
+
+# Local config overrides
+config.yaml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

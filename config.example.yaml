@@ -1,0 +1,170 @@
+# ============================================================================
+# DUBAI THERMAL COMFORT ANALYSIS - PROJECT CONFIGURATION
+# ============================================================================
+# Reusable for other locations: copy this folder, edit the values below.
+# All paths are relative to the project root (06_Zensvi_Clean/).
+# ============================================================================
+
+project:
+  name: "Dubai_BusinessBay_2024"
+  location: "Business Bay, Dubai"
+  latitude: 25.1855
+  longitude: 55.2624
+  description: "Street-level thermal comfort analysis - 2,875 points"
+  root: ""
+  paths:
+    source_root: "00_Source"
+    images_dir: "00_Source/Google_Street_Image/Business Bay"
+    metadata_dir: "00_Source/Metadata/Business Bay"
+    segmentation_dir: "00_Source/Segmentation"
+    thermal_output_dir: "00_Source/Thermal"
+    code_dir: "01_Code/thermal_comfort_pipeline"
+  epw:
+    file: "00_Source/EPW/Dubai.epw"
+    timezone: "GST"
+
+filenames:
+  image_extension: ".jpg"
+  metadata_suffix: ".metadata.json"
+  segmentation_colored_suffix: "_colored_segmented.png"
+  segmentation_blend_suffix: "_blend.png"
+  point_id_style: "underscore"
+
+analysis:
+  analysis_height: 1.5
+  analysis_period:
+    start_hour: 6
+    end_hour: 18
+    design_days:
+      - {month: 1,  day: 21, name: "Jan"}
+      - {month: 2,  day: 21, name: "Feb"}
+      - {month: 3,  day: 21, name: "Mar"}
+      - {month: 4,  day: 21, name: "Apr"}
+      - {month: 5,  day: 21, name: "May"}
+      - {month: 6,  day: 21, name: "Jun"}
+      - {month: 7,  day: 21, name: "Jul"}
+      - {month: 8,  day: 21, name: "Aug"}
+      - {month: 9,  day: 21, name: "Sep"}
+      - {month: 10, day: 21, name: "Oct"}
+      - {month: 11, day: 21, name: "Nov"}
+      - {month: 12, day: 21, name: "Dec"}
+  grasshopper_outputs:
+    - shadow_hours
+    - radiation_kwh
+    - svf
+    - utci
+    - mrt
+
+metadata:
+  essential_fields:
+    point_id_source: "filename"
+    lat: "lat"
+    lng: "lng"
+    elevation: "elevation"
+    year: "date.year"
+    month: "date.month"
+    pano_id: "panoId"
+    rotation: "rotation"
+  coordinate_bounds:
+    lat_min: 24.7
+    lat_max: 25.6
+    lng_min: 54.8
+    lng_max: 55.8
+  output_file: "00_Source/Thermal/master_metadata.csv"
+
+segmentation:
+  class_palette:
+    sky:        [70, 130, 180]
+    building:   [70, 70, 70]
+    vegetation: [107, 142, 35]
+    terrain:    [152, 251, 152]
+    road:       [128, 64, 128]
+    pavement:   [244, 35, 232]
+    car:        [0, 0, 142]
+    truck:      [0, 0, 70]
+    bus:        [0, 60, 100]
+    person:     [220, 20, 60]
+    rider:      [255, 0, 0]
+    pole:       [153, 153, 153]
+    traffic_light: [250, 170, 30]
+    traffic_sign:  [220, 220, 0]
+    fence:      [190, 153, 153]
+    wall:       [102, 102, 156]
+  color_match_tolerance: 8
+  output_file: "00_Source/Thermal/Segmentation_Extracted/segmentation_metrics.csv"
+
+grasshopper:
+  input_geojson: "00_Source/Thermal/Grasshopper_Input/points_for_grasshopper.geojson"
+  input_csv:     "00_Source/Thermal/Grasshopper_Input/points_for_grasshopper.csv"
+  output_dir: "00_Source/Thermal/Grasshopper_Output"
+  output_format: "csv"
+  output_naming_template: "grasshopper_results_month_{month:02d}.csv"
+  expected_columns:
+    - point_id
+    - month
+    - shadow_hours
+    - radiation_kwh
+    - svf
+    - utci
+    - utci_max
+    - utci_min
+    - utci_noon
+    - mrt
+  model_path: "[USER TO PROVIDE]"
+
+bridge_shadow:
+  input_dir: "02_Process/Shadow_Analysis"
+  input_filename_template: "shadow_results {month}.csv"
+  input_value_column: "shadow_fraction"
+  analysis_hours: 12
+  timestep: 6
+  value_unit: "auto"
+  raw_is_sunny_ticks: true
+
+bridge_radiation:
+  input_dir: "02_Process/Radiation_Analysis"
+  input_filename_template: "Radiation_result {month}.csv"
+
+bridge_svf:
+  input_file: "02_Process/Sky Value factor_Analysis/svf_results.csv"
+
+bridge_utci:
+  input_dir: "02_Process/UTCI_Analysis"
+  input_filename_template: "UTCI_Analysis {month}.csv"
+
+merge:
+  output_file: "00_Source/Thermal/Merged_Data/merged_thermal_data.csv"
+
+comfort_thresholds:
+  utci_categories:
+    - {min: -100, max: -27, label: "Extreme Cold",   action: "Shelter required"}
+    - {min: -27,  max: -13, label: "Very Cold",      action: "Heavy protection"}
+    - {min: -13,  max: 0,   label: "Cold",           action: "Warm clothing"}
+    - {min: 0,    max: 9,   label: "Cool",           action: "Light jacket"}
+    - {min: 9,    max: 26,  label: "Neutral",        action: "Comfortable"}
+    - {min: 26,   max: 32,  label: "Warm",           action: "Shade + ventilation"}
+    - {min: 32,   max: 38,  label: "Very Warm",      action: "Urgent: Shade + water"}
+    - {min: 38,   max: 46,  label: "Extremely Hot",  action: "Critical: Shade + misting"}
+    - {min: 46,   max: 100, label: "Extreme Heat",   action: "Stay indoors"}
+
+output:
+  final_geojson: "00_Source/Thermal/Merged_Data/dubai_thermal_complete.geojson"
+  log_dir: "00_Source/Thermal/logs"
+  dashboard:
+    enabled: false
+    host: "localhost"
+    port: 8000
+    geojson_for_dashboard: "04_Result/dubai_comfort_analysis.geojson"
+
+processing:
+  skip_metadata_extraction: false
+  skip_segmentation_analysis: false
+  skip_prepare_grasshopper: false
+  skip_merge: false
+  on_missing_metadata: "skip_point"
+  on_invalid_coords: "skip_point"
+
+logging:
+  level: "INFO"
+  save_logs: true
+  log_format: "[%(asctime)s] %(levelname)s: %(message)s"
